@@ -1,4 +1,4 @@
-## Lord Of The Rings: Gymnastic Rings Chatbot
+## Lord Of The Rings: Personal Rings Trainer Chatbot
 ### Overview
 This chatbot is like your personal coach for gymnastic rings.
 It's here to hook you up with all you need to nail those ring routines.
