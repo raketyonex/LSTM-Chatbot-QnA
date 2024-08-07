@@ -5,19 +5,19 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 
 # 1. Memuat Model dan Sumber Daya
-model = load_model('stver/models/tmp/bot_model.h5')
+model = load_model('path/to/file/bot_model.h5')
 
-with open('stver/models/tmp/tokenizer.pkl', 'rb') as f:
+with open('path/to/file/tokenizer.pkl', 'rb') as f:
     tokenizer = pickle.load(f)
 
-with open('stver/models/tmp/label_enc.pkl', 'rb') as f:
+with open('path/to/file/label_enc.pkl', 'rb') as f:
     encoder = pickle.load(f)
 
-with open('stver/models/tmp/responses.json', 'r') as f:
+with open('path/to/file/responses.json', 'r') as f:
     responses = json.load(f)
 
 # Memuat maxlen dari file
-with open('stver/models/tmp/maxlen.txt', 'r') as f:
+with open('path/to/file/maxlen.txt', 'r') as f:
     maxlen = int(f.read().strip())
 
 # 2. Mendefinisikan Fungsi untuk Inferensi
