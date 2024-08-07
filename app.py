@@ -1,7 +1,7 @@
 import streamlit as st
 from bot import chatbot
 
-st.markdown("<h3 style='text-align: center;'>Curhat Dong BOT</h3><h6 style='text-align: center;'>Iyaaa MBOT</h6>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>Curhat Dong BOT</h3><h6 style='text-align: center;'>Iyaaa Dong</h6>", unsafe_allow_html=True)
 
 # Inisialisasi session_state untuk menyimpan pesan-pesan chat
 if "messages" not in st.session_state:
