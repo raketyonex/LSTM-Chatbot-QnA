@@ -1,1 +1,1 @@
-### ChatBoT: text(intents) classification with your own dataset.
+### ChatBoT: Text (Intents) classification with your own dataset.
