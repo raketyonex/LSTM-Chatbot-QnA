@@ -3,7 +3,7 @@
 # import dataset json
 import json
 
-with open('stver/models/data.json', 'r') as dataset:
+with open('path/to/file/data.json', 'r') as dataset:
     data = json.load(dataset)
 
 # ambil semua data dari dataset
@@ -74,20 +74,20 @@ model.fit(x, y, batch_size=10, epochs=100, callbacks=[EarlyStopping(monitor='acc
 import pickle
 
 # Menyimpan model
-model.save('stver/models/tmp/bot_model.h5')
+model.save('path/to/save/bot_model.h5')
 
 # Menyimpan tokenizer
-with open('stver/models/tmp/tokenizer.pkl', 'wb') as f:
+with open('path/to/save/tokenizer.pkl', 'wb') as f:
     pickle.dump(tokenizer, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Menyimpan label encoder
-with open('stver/models/tmp/label_enc.pkl', 'wb') as f:
+with open('path/to/save/label_enc.pkl', 'wb') as f:
     pickle.dump(encoder, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 # menyimpan dict response ke file json
-with open('stver/models/tmp/responses.json', 'w') as f:
+with open('path/to/save/responses.json', 'w') as f:
     json.dump(responses, f)
 
 # Menyimpan maxlen ke dalam file
-with open('stver/models/tmp/maxlen.txt', 'w') as f:
+with open('path/to/save/maxlen.txt', 'w') as f:
     f.write(str(maxlen))
