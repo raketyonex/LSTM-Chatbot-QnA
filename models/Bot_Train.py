@@ -1,93 +1,95 @@
-### STEP 1: load dataset dan preprocess ###
-
-# import dataset json
+### load dataset json
 import json
 
-with open('path/to/file/data.json', 'r') as dataset:
-    data = json.load(dataset)
+with open('path/to/files/data.json', 'r') as f:
+    dataset = json.load(f)
 
-# ambil semua data dari dataset
-tags = []
-patterns = []
+# ekstrak & pisahkan data ke masing-masing variabel
 responses = {}
-for intent in data['intents']:
-    responses[intent['tag']]=intent['responses']
+patterns = []
+tags = []
+for intent in dataset['intents']:
+    responses[intent['tag']] = intent['responses']
     for pattern in intent['patterns']:
-        tags.append(intent['tag'])
         patterns.append(pattern)
+        tags.append(intent['tag'])
 
-# tokenisasi data
+import string
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+# fungsi untuk preprocessing
+def pprocess(teks):
+    # tokenisasi (pecah kalimat jadi per teks) & hapus tanda baca
+    token = word_tokenize(teks)
+    token = [kata for kata in token if kata not in string.punctuation]
+
+    # hapus stop word
+    hapus = set(stopwords.words('indonesian'))
+    saring = [kata for kata in token if kata.lower() not in hapus]
+
+    # lematisasi (ubah kata yang kesaring ke dalam bentuk kamusnya)
+    lema = WordNetLemmatizer()
+    output = [lema.lemmatize(kata) for kata in saring]
+
+    return output
+
+## preprocessing teks dan satukan lagi jadi data teks baru
+pprocess_teks = [pprocess(kata) for kata in patterns]
+teks = [' '.join(tokens) for tokens in pprocess_teks]
+
+# lanjut preprocessing data teks baru untuk pembuatan model
 from tensorflow.keras.preprocessing.text import Tokenizer
-
-tokenizer = Tokenizer()
-tokenizer.fit_on_texts(patterns)
-vocab = len(tokenizer.word_index)  # jumlah kata unik dalam tokenizer
-
-# konversi teks jadi urutan angka & kasih padding untuk urutan angka
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-
-txt2seq = tokenizer.texts_to_sequences(patterns)
-maxlen = max(len(seq) for seq in txt2seq)  # panjang maksimum urutan
-x = pad_sequences(txt2seq, maxlen=maxlen, padding='post')
-
-# buat label encoding output
 from sklearn.preprocessing import LabelEncoder
 
+# buat kamus token (pecah kata dan buat jadi urutan numerik)
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(teks)
+vocab = len(tokenizer.word_index)
+
+seqteks = tokenizer.texts_to_sequences(teks)
+maxlen = max(len(seq) for seq in seqteks)
+x = pad_sequences(seqteks, maxlen=maxlen, padding='post')
+
+# buat label output dari tags
 encoder = LabelEncoder()
 y = encoder.fit_transform(tags)
 
-
-### STEP 2: pembuatan & pelatihan model ###
-
-# import library untuk pembuatan model
-import numpy as np
+### pembuatan & pelatihan model
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input, Embedding, LSTM, LayerNormalization, Dense, Dropout
+from tensorflow.keras.layers import Embedding, LSTM, Dense, SpatialDropout1D
 from tensorflow.keras.callbacks import EarlyStopping
 
 # Membuat model Sequential
 model = Sequential()
 
 # Menambahkan lapisan-lapisan ke dalam model
-model.add(Input(shape=(x.shape[1],)))  # Lapisan input dengan bentuk sesuai dengan x
-model.add(Embedding(input_dim=vocab+1, output_dim=100, mask_zero=True))  # Lapisan embedding dengan vocab_size + 1 sebagai input_dim
-model.add(LSTM(32, return_sequences=True))  # Lapisan LSTM dengan 32 unit dan return_sequences=True
-model.add(LayerNormalization())  # Lapisan normalisasi
-model.add(LSTM(32, return_sequences=True))  # Lapisan LSTM kedua dengan 32 unit dan return_sequences=True
-model.add(LayerNormalization())  # Lapisan normalisasi
-model.add(LSTM(32))  # Lapisan LSTM ketiga dengan 32 unit
-model.add(LayerNormalization())  # Lapisan normalisasi
-model.add(Dense(128, activation="relu"))  # Lapisan dense dengan 128 unit dan fungsi aktivasi ReLU
-model.add(LayerNormalization())  # Lapisan normalisasi
-model.add(Dropout(0.2))  # Lapisan dropout dengan tingkat dropout 0.2
-model.add(Dense(128, activation="relu"))  # Lapisan dense kedua dengan 128 unit dan fungsi aktivasi ReLU
-model.add(LayerNormalization())  # Lapisan normalisasi
-model.add(Dropout(0.2))  # Lapisan dropout kedua dengan tingkat dropout 0.2
-model.add(Dense(len(np.unique(y)), activation="softmax"))  # Lapisan dense terakhir dengan jumlah unit sesuai dengan jumlah kelas dan fungsi aktivasi softmax
+model.add(Embedding(input_dim=vocab+1, output_dim=128, mask_zero=True, input_length=x.shape[1]))
+model.add(SpatialDropout1D(0.2))
+model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(len(y), activation='softmax'))
 
 # Training & mengompilasi model dengan optimizer Adam, fungsi loss sparse_categorical_crossentropy, dan metrik akurasi
 model.compile(optimizer='adam', loss="sparse_categorical_crossentropy", metrics=['accuracy']) 
 model.fit(x, y, batch_size=10, epochs=100, callbacks=[EarlyStopping(monitor='accuracy', patience=3)])
 
-### STEP 3: simpan file untuk inferensi model ###
-
+### impan file untuk inferensi model
 import pickle
 
 # Menyimpan model
-model.save('path/to/save/bot_model.h5')
+model.save('path/to/files/bot_model.h5')
 
 # Menyimpan tokenizer
-with open('path/to/save/tokenizer.pkl', 'wb') as f:
+with open('path/to/files/tokenizer.pkl', 'wb') as f:
     pickle.dump(tokenizer, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Menyimpan label encoder
-with open('path/to/save/label_enc.pkl', 'wb') as f:
+with open('path/to/files/label_enc.pkl', 'wb') as f:
     pickle.dump(encoder, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-# menyimpan dict response ke file json
-with open('path/to/save/responses.json', 'w') as f:
+# Menyimpan dict response ke file json
+with open('path/to/files/responses.json', 'w') as f:
     json.dump(responses, f)
-
-# Menyimpan maxlen ke dalam file
-with open('path/to/save/maxlen.txt', 'w') as f:
-    f.write(str(maxlen))
