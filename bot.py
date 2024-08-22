@@ -1,6 +1,12 @@
 import json
 import pickle
 import numpy as np
+
+import string
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 
@@ -16,15 +22,26 @@ with open('path/to/file/label_enc.pkl', 'rb') as f:
 with open('path/to/file/responses.json', 'r') as f:
     responses = json.load(f)
 
-# Memuat maxlen dari file
-with open('path/to/file/maxlen.txt', 'r') as f:
-    maxlen = int(f.read().strip())
+# 2. Mendefinisikan Preprocessing & Fungsi untuk Inferensi
+def pprocess(txt):
+    token = word_tokenize(txt)
+    token = [kata for kata in token if kata not in string.punctuation]
 
-# 2. Mendefinisikan Fungsi untuk Inferensi
+    hapus = set(stopwords.words('indonesian'))
+    saring = [kata for kata in token if kata.lower() not in hapus]
+
+    lema = WordNetLemmatizer()
+    tokens = [lema.lemmatize(kata) for kata in saring]
+
+    return ' '.join(tokens)
+
 def response(input_text):
+    # preprocessing input
+    msg = pprocess(input_text)
+    
     # Tokenisasi dan konversi input_text menjadi urutan angka
-    seq = tokenizer.texts_to_sequences([input_text])
-    padded = pad_sequences(seq, maxlen=maxlen, padding='post')  # Gunakan maxlen yang dimuat
+    seq = tokenizer.texts_to_sequences([msg])
+    padded = pad_sequences(seq)
 
     # Melakukan prediksi
     prediction = model.predict(padded)
